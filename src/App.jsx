@@ -1,11 +1,5 @@
 import { useEffect, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
-
-// Remplace ces valeurs par les tiennes :
-const supabase = createClient(
-  'https://byeaovijxqxgdybaxbnc.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ5ZWFvdmlqeHF4Z2R5YmF4Ym5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE4MDYwMzQsImV4cCI6MjA2NzM4MjAzNH0.AdAVgyGeGqjer1C96QvfeXI2NHhJmSJiqxT8rOd0jNw'
-);
+import { supabase } from './src_supabase';
 
 const TAGS = [
   'Bitcoin', 'Crypto', 'Runes', 'DeFi', 'Market',
@@ -31,17 +25,17 @@ export default function App() {
     if (!error) setTweets(data);
   };
 
-  const fetchUsedTweets = async () => {
-    const { data, error } = await supabase.from('tweets').select('*').eq('used', true);
-    if (!error) setUsedTweets(data);
-  };
-
   const markAsUsed = async (id) => {
     const { error } = await supabase.from('tweets').update({ used: true }).eq('id', id);
     if (!error) {
       setTweets(tweets.filter(tweet => tweet.id !== id));
       fetchUsedTweets();
     }
+  };
+
+  const fetchUsedTweets = async () => {
+    const { data, error } = await supabase.from('tweets').select('*').eq('used', true);
+    if (!error) setUsedTweets(data);
   };
 
   const toggleTag = (tag) => {
