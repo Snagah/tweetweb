@@ -103,6 +103,14 @@ const saveEditedTweet = async (id) => {
     setDebugMessage(`❌ Failed to save tweet: ${error.message}`);
   }
 };
+  const clearRating = async (id) => {
+  const { error } = await supabase.from('tweets').update({ rating: null }).eq('id', id);
+  if (!error) {
+    setRatingsMap({ ...ratingsMap, [id]: null });
+    setTweets(tweets.map(tweet => (tweet.id === id ? { ...tweet, rating: null } : tweet)));
+  }
+};
+
 
 
 
@@ -207,12 +215,13 @@ const saveEditedTweet = async (id) => {
                   {tweet.rating ? (
                     <>
                       <span className="text-sm text-gray-700">Rated: {tweet.rating}★</span>
-                      <button
-                        onClick={() => setRatingsMap({ ...ratingsMap, [tweet.id]: 0 })}
-                        className="text-sm text-blue-500 underline"
-                      >
-                        Change rating
-                      </button>
+<button
+  onClick={() => clearRating(tweet.id)}
+  className="text-sm text-blue-500 underline"
+>
+  Change rating
+</button>
+
                     </>
                   ) : (
                     <>
