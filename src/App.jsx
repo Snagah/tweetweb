@@ -18,11 +18,12 @@ export default function App() {
   const [ratingsMap, setRatingsMap] = useState({});
   const [editingTweetId, setEditingTweetId] = useState(null);
   const [editedText, setEditedText] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetchTweets();
     fetchUsedTweets();
-  }, [selectedTags, selectedRatings, filterFavorites]);
+  }, [selectedTags, selectedRatings, filterFavorites, searchTerm]);
 
   const fetchTweets = async () => {
     const { data, error } = await supabase
@@ -44,6 +45,12 @@ export default function App() {
 
       if (filterFavorites) {
         filtered = filtered.filter(tweet => tweet.is_favorite);
+      }
+
+      if (searchTerm.trim()) {
+        filtered = filtered.filter(tweet =>
+          (tweet.custom_text || tweet.text).toLowerCase().includes(searchTerm.toLowerCase())
+        );
       }
 
       const shuffled = filtered.sort(() => 0.5 - Math.random()).slice(0, 5);
@@ -126,6 +133,14 @@ export default function App() {
     }
   };
 
+  const highlightSearch = (text) => {
+    if (!searchTerm) return text;
+    const parts = text.split(new RegExp(`(${searchTerm})`, 'gi'));
+    return parts.map((part, i) =>
+      part.toLowerCase() === searchTerm.toLowerCase() ? <mark key={i} className="bg-yellow-200">{part}</mark> : part
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-300 via-yellow-100 to-red-200 text-black p-4 flex flex-col items-center">
       <div className="max-w-xl w-full space-y-6">
@@ -176,6 +191,17 @@ export default function App() {
         </div>
 
         <div className="bg-white/30 backdrop-blur-md rounded-2xl p-4 shadow-md">
+          <h2 className="text-lg font-semibold mb-2">🔍 Search tweets</h2>
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full p-2 border rounded"
+            placeholder="Enter a keyword..."
+          />
+        </div>
+
+        <div className="bg-white/30 backdrop-blur-md rounded-2xl p-4 shadow-md">
           <h2 className="text-lg font-semibold mb-4">📝 Suggested Tweets</h2>
           {tweets.length > 0 ? (
             tweets.map(tweet => (
@@ -202,7 +228,7 @@ export default function App() {
                   </>
                 ) : (
                   <>
-                    <p className="mb-6">{tweet.custom_text || tweet.text}</p>
+                    <p className="mb-6">{highlightSearch(tweet.custom_text || tweet.text)}</p>
                     <div className="border-t pt-2 mt-2 bg-white/60 rounded-md p-2">
                       <div className="flex flex-wrap items-center gap-2 mb-2">
                         <a
@@ -229,7 +255,7 @@ export default function App() {
                           ✏️ Edit
                         </button>
                       </div>
-                      <div className="mt-2 mb-2">
+                      <div className="flex flex-wrap items-center gap-2 mt-2">
                         {tweet.rating ? (
                           <>
                             <span className="text-sm text-gray-700">Rated: {tweet.rating}⭐</span>
@@ -241,7 +267,7 @@ export default function App() {
                             </button>
                           </>
                         ) : (
-                          <div className="flex gap-1 items-center mb-2">
+                          <>
                             <span className="text-sm text-gray-700">Rate:</span>
                             {RATINGS.map(r => (
                               <button
@@ -252,7 +278,7 @@ export default function App() {
                                 {r}⭐
                               </button>
                             ))}
-                          </div>
+                          </>
                         )}
                         <button
                           onClick={() => toggleFavorite(tweet.id, !tweet.is_favorite)}
