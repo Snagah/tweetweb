@@ -15,6 +15,8 @@ export default function App() {
   const [selectedRatings, setSelectedRatings] = useState([]);
   const [debugMessage, setDebugMessage] = useState('');
   const [ratingsMap, setRatingsMap] = useState({});
+  const [editingTweetId, setEditingTweetId] = useState(null);
+  const [editedText, setEditedText] = useState('');
 
   useEffect(() => {
     fetchTweets();
@@ -86,6 +88,19 @@ export default function App() {
     }
   };
 
+  const saveEditedTweet = async (id) => {
+    const { error } = await supabase
+      .from('tweets')
+      .update({ custom_text: editedText })
+      .eq('id', id);
+
+    if (!error) {
+      setTweets(tweets.map(t => t.id === id ? { ...t, custom_text: editedText } : t));
+      setEditingTweetId(null);
+      setEditedText('');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-300 via-yellow-100 to-red-200 text-black p-4 flex flex-col items-center">
       <div className="max-w-xl w-full space-y-6">
@@ -132,23 +147,57 @@ export default function App() {
           {tweets.length > 0 ? (
             tweets.map(tweet => (
               <div key={tweet.id} className="bg-white rounded-xl p-3 shadow-sm mb-4">
-                <p className="mb-2">{tweet.text}</p>
-                <div className="flex gap-2 mb-2">
-                  <a
-                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweet.text)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-blue-500 text-white px-3 py-1 rounded"
-                  >
-                    Tweet it
-                  </a>
-                  <button
-                    onClick={() => markAsUsed(tweet.id)}
-                    className="bg-gray-300 text-black px-3 py-1 rounded"
-                  >
-                    Mark as used
-                  </button>
-                </div>
+                {editingTweetId === tweet.id ? (
+                  <>
+                    <textarea
+                      className="w-full p-2 border rounded mb-2"
+                      value={editedText}
+                      onChange={(e) => setEditedText(e.target.value)}
+                    />
+                    <button
+                      onClick={() => saveEditedTweet(tweet.id)}
+                      className="bg-green-500 text-white px-3 py-1 rounded mr-2"
+                    >
+                      💾 Save
+                    </button>
+                    <button
+                      onClick={() => setEditingTweetId(null)}
+                      className="bg-gray-300 text-black px-3 py-1 rounded"
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <p className="mb-2">{tweet.custom_text || tweet.text}</p>
+                    <div className="flex gap-2 mb-2">
+                      <a
+                        href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweet.custom_text || tweet.text)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-blue-500 text-white px-3 py-1 rounded"
+                      >
+                        Tweet it
+                      </a>
+                      <button
+                        onClick={() => markAsUsed(tweet.id)}
+                        className="bg-gray-300 text-black px-3 py-1 rounded"
+                      >
+                        Mark as used
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditingTweetId(tweet.id);
+                          setEditedText(tweet.custom_text || tweet.text);
+                        }}
+                        className="bg-yellow-400 text-black px-3 py-1 rounded"
+                      >
+                        ✏️ Edit
+                      </button>
+                    </div>
+                  </>
+                )}
+
                 <div className="flex items-center gap-2">
                   {tweet.rating ? (
                     <>
