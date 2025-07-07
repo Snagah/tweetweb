@@ -164,8 +164,6 @@ export default function App() {
                 {rating}⭐
               </button>
             ))}
-          </div>
-          <div className="flex justify-center">
             <button
               onClick={toggleFilterFavorites}
               className={`px-3 py-1 rounded-full border transition ${
@@ -204,8 +202,8 @@ export default function App() {
                   </>
                 ) : (
                   <>
-                    <p className="mb-2">{tweet.custom_text || tweet.text}</p>
-                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <p className="mb-4">{tweet.custom_text || tweet.text}</p>
+                    <div className="border-t pt-2 mt-2 bg-white/60 rounded-md p-2 flex flex-wrap items-center gap-2">
                       <a
                         href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweet.custom_text || tweet.text)}`}
                         target="_blank"
@@ -214,13 +212,7 @@ export default function App() {
                       >
                         Tweet it
                       </a>
-                      <button
-                        onClick={() => markAsUsed(tweet.id)}
-                        className="bg-gray-300 text-black px-3 py-1 rounded"
-                      >
-                        Mark as used
-                      </button>
-                      <button
+                                            <button
                         onClick={() => {
                           setEditingTweetId(tweet.id);
                           setEditedText(tweet.custom_text || tweet.text);
@@ -229,18 +221,33 @@ export default function App() {
                       >
                         ✏️ Edit
                       </button>
+                      <button
+                        onClick={() => markAsUsed(tweet.id)}
+                        className="bg-gray-300 text-black px-3 py-1 rounded"
+                      >
+                        Mark as used
+                      </button>
+
+                      <button
+                        onClick={() => toggleFavorite(tweet.id, !tweet.is_favorite)}
+                        className="text-lg px-2"
+                      >
+                        {tweet.is_favorite ? '💔' : '❤️'}
+                      </button>
+                    </div>
+                    <div className="mt-2">
                       {tweet.rating ? (
                         <>
                           <span className="text-sm text-gray-700">Rated: {tweet.rating}⭐</span>
                           <button
                             onClick={() => clearRating(tweet.id)}
-                            className="text-sm text-blue-500 underline"
+                            className="text-sm text-blue-500 underline ml-2"
                           >
                             Change rating
                           </button>
                         </>
                       ) : (
-                        <>
+                        <div className="flex gap-1 items-center">
                           <span className="text-sm text-gray-700">Rate:</span>
                           {RATINGS.map(r => (
                             <button
@@ -251,14 +258,8 @@ export default function App() {
                               {r}⭐
                             </button>
                           ))}
-                        </>
+                        </div>
                       )}
-                      <button
-                        onClick={() => toggleFavorite(tweet.id, !tweet.is_favorite)}
-                        className="text-lg px-2"
-                      >
-                        {tweet.is_favorite ? '💔' : '❤️'}
-                      </button>
                     </div>
                   </>
                 )}
@@ -276,17 +277,6 @@ export default function App() {
             </button>
           </div>
         </div>
-
-        {usedTweets.length > 0 && (
-          <div className="bg-white/30 backdrop-blur-md rounded-2xl p-4 shadow-md">
-            <h2 className="text-lg font-semibold mb-2">✅ Already Used Tweets</h2>
-            <ul className="list-disc list-inside text-gray-700 space-y-1">
-              {usedTweets.map(t => (
-                <li key={t.id}>{t.text}</li>
-              ))}
-            </ul>
-          </div>
-        )}
       </div>
     </div>
   );
