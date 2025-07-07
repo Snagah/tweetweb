@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { supabase } from './src_supabase';
 
 const TAGS = [
-  'BITCOIN', 'Crypto', 'Runes', 'DeFi', 'Market',
-  'Ordinals', 'Ecosystem', 'Adoption', 'Trading', 'Memes'
+  'BITCOIN', 'CRYPTO', 'RUNES', 'DEFI', 'MARKET',
+  'ORDINALS', 'ECOSYSTEM', 'ADOPTION', 'TRADING', 'MEMES'
 ];
 
 export default function App() {
@@ -44,9 +44,14 @@ export default function App() {
   };
 
   const toggleTag = (tag) => {
+    const upperTag = tag.toUpperCase();
     setSelectedTags(prev =>
-      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+      prev.includes(upperTag) ? prev.filter(t => t !== upperTag) : [...prev, upperTag]
     );
+  };
+
+  const regenerateTweets = () => {
+    fetchTweets();
   };
 
   return (
@@ -100,6 +105,14 @@ export default function App() {
           ) : (
             <p className="text-center text-gray-600">No tweets available.</p>
           )}
+          <div className="flex justify-center mt-2">
+            <button
+              onClick={regenerateTweets}
+              className="bg-orange-500 text-white px-4 py-2 rounded-lg shadow hover:bg-orange-600 transition"
+            >
+              🔄 Regenerate Tweets
+            </button>
+          </div>
         </div>
 
         {usedTweets.length > 0 && (
