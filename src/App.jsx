@@ -10,10 +10,10 @@ export default function App() {
   const [tweets, setTweets] = useState([]);
   const [usedTweets, setUsedTweets] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
+  const [debugMessage, setDebugMessage] = useState('');
 
   useEffect(() => {
     fetchTweets();
-    fetchUsedTweets();
   }, [selectedTags]);
 
   const fetchTweets = async () => {
@@ -22,7 +22,12 @@ export default function App() {
       query = query.contains('tags', selectedTags);
     }
     const { data, error } = await query.limit(3);
-    if (!error) setTweets(data);
+    if (!error) {
+      setTweets(data);
+      setDebugMessage(`✅ Loaded ${data.length} tweet(s) from database.`);
+    } else {
+      setDebugMessage(`❌ Error fetching tweets: ${error.message}`);
+    }
   };
 
   const markAsUsed = async (id) => {
@@ -47,6 +52,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-200 via-yellow-200 to-red-200 p-4 text-black">
       <h1 className="text-3xl font-bold text-center mb-4">🚀 Tweet Suggester</h1>
+      <div className="text-sm text-gray-600 text-center mb-4">{debugMessage}</div>
       <div className="flex flex-wrap justify-center gap-2 mb-6">
         {TAGS.map(tag => (
           <button
