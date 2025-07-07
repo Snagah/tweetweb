@@ -21,7 +21,7 @@ export default function App() {
     if (selectedTags.length > 0) {
       query = query.contains('tags', selectedTags);
     }
-    const { data, error } = await query.limit(5);
+   const { data, error } = await query.order('RANDOM()').limit(5);
     if (!error) {
       setTweets(data);
       setDebugMessage(`✅ Loaded ${data.length} tweet(s) from database.`);
