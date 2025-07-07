@@ -98,11 +98,12 @@ const saveEditedTweet = async (id) => {
     setTweets(tweets.map(t => t.id === id ? { ...t, custom_text: editedText } : t));
     setEditingTweetId(null);
     setEditedText('');
-    fetchTweets(); // ✅ Rafraîchir la liste pour réafficher les boutons
+    setDebugMessage('✅ Tweet updated successfully.');
   } else {
     setDebugMessage(`❌ Failed to save tweet: ${error.message}`);
   }
 };
+
 
 
   return (
