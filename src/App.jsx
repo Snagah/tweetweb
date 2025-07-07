@@ -170,7 +170,7 @@ export default function App() {
                 filterFavorites ? 'bg-pink-500 text-white' : 'bg-white text-black'
               }`}
             >
-              ❤️ Favorites
+              ❤️
             </button>
           </div>
         </div>
@@ -202,64 +202,65 @@ export default function App() {
                   </>
                 ) : (
                   <>
-                    <p className="mb-4">{tweet.custom_text || tweet.text}</p>
-                    <div className="border-t pt-2 mt-2 bg-white/60 rounded-md p-2 flex flex-wrap items-center gap-2">
-                      <a
-                        href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweet.custom_text || tweet.text)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-blue-500 text-white px-3 py-1 rounded"
-                      >
-                        Tweet it
-                      </a>
-                                            <button
-                        onClick={() => {
-                          setEditingTweetId(tweet.id);
-                          setEditedText(tweet.custom_text || tweet.text);
-                        }}
-                        className="bg-yellow-400 text-black px-3 py-1 rounded"
-                      >
-                        ✏️ Edit
-                      </button>
-                      <button
-                        onClick={() => markAsUsed(tweet.id)}
-                        className="bg-gray-300 text-black px-3 py-1 rounded"
-                      >
-                        Mark as used
-                      </button>
-                                                <button
-                        onClick={() => toggleFavorite(tweet.id, !tweet.is_favorite)}
-                        className="text-lg px-2"
-                      >
-                        {tweet.is_favorite ? '💔' : '❤️'}
-                      </button>
-
-                    </div>
-                    <div className="mt-2">
-                      {tweet.rating ? (
-                        <>
-                          <span className="text-sm text-gray-700">Rated: {tweet.rating}⭐</span>
-                          <button
-                            onClick={() => clearRating(tweet.id)}
-                            className="text-sm text-blue-500 underline ml-2"
-                          >
-                            Change rating
-                          </button>
-                        </>
-                      ) : (
-                        <div className="flex gap-1 items-center">
-                          <span className="text-sm text-gray-700">Rate:</span>
-                          {RATINGS.map(r => (
+                    <p className="mb-6">{tweet.custom_text || tweet.text}</p>
+                    <div className="border-t pt-2 mt-2 bg-white/60 rounded-md p-2">
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
+                        <a
+                          href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweet.custom_text || tweet.text)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="bg-blue-500 text-white px-3 py-1 rounded"
+                        >
+                          Tweet it
+                        </a>
+                        <button
+                          onClick={() => markAsUsed(tweet.id)}
+                          className="bg-gray-300 text-black px-3 py-1 rounded"
+                        >
+                          Mark as used
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingTweetId(tweet.id);
+                            setEditedText(tweet.custom_text || tweet.text);
+                          }}
+                          className="bg-yellow-400 text-black px-3 py-1 rounded"
+                        >
+                          ✏️ Edit
+                        </button>
+                      </div>
+                      <div className="mt-2 mb-2">
+                        {tweet.rating ? (
+                          <>
+                            <span className="text-sm text-gray-700">Rated: {tweet.rating}⭐</span>
                             <button
-                              key={r}
-                              onClick={() => rateTweet(tweet.id, r)}
-                              className="text-sm px-2 py-1 rounded bg-yellow-200 hover:bg-yellow-300"
+                              onClick={() => clearRating(tweet.id)}
+                              className="text-sm text-blue-500 underline ml-2"
                             >
-                              {r}⭐
+                              Change rating
                             </button>
-                          ))}
-                        </div>
-                      )}
+                          </>
+                        ) : (
+                          <div className="flex gap-1 items-center mb-2">
+                            <span className="text-sm text-gray-700">Rate:</span>
+                            {RATINGS.map(r => (
+                              <button
+                                key={r}
+                                onClick={() => rateTweet(tweet.id, r)}
+                                className="text-sm px-2 py-1 rounded bg-yellow-200 hover:bg-yellow-300"
+                              >
+                                {r}⭐
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        <button
+                          onClick={() => toggleFavorite(tweet.id, !tweet.is_favorite)}
+                          className="text-lg px-2"
+                        >
+                          {tweet.is_favorite ? '💔' : '❤️'}
+                        </button>
+                      </div>
                     </div>
                   </>
                 )}
