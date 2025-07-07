@@ -3,44 +3,50 @@ import { supabase } from './src_supabase';
 
 const TAGS = [
   'BITCOIN', 'CRYPTO', 'RUNES', 'DEFI', 'MARKET',
-  'ORDINALS', 'ECOSYSTEM', 'ADOPTION', 'TRADING', 'MIDL', 'MEMES'
+  'ORDINALS', 'ECOSYSTEM', 'ADOPTION', 'TRADING', 'MEMES', 'MIDL'
 ];
+
+const RATINGS = [1, 2, 3, 4, 5];
 
 export default function App() {
   const [tweets, setTweets] = useState([]);
   const [usedTweets, setUsedTweets] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
+  const [selectedRatings, setSelectedRatings] = useState([]);
   const [debugMessage, setDebugMessage] = useState('');
+  const [ratingsMap, setRatingsMap] = useState({});
 
   useEffect(() => {
     fetchTweets();
-  }, [selectedTags]);
+  }, [selectedTags, selectedRatings]);
 
-const fetchTweets = async () => {
-  const { data, error } = await supabase
-    .from('tweets')
-    .select('*')
-    .eq('used', false)
-    .eq('is_active', true);
+  const fetchTweets = async () => {
+    const { data, error } = await supabase
+      .from('tweets')
+      .select('*')
+      .eq('used', false)
+      .eq('is_active', true);
 
-  if (!error && data.length > 0) {
-    // Filtrage par tags si besoin
-    const filtered = selectedTags.length > 0
-      ? data.filter(tweet => tweet.tags.some(tag => selectedTags.includes(tag)))
-      : data;
+    if (!error && data.length > 0) {
+      let filtered = data;
 
-    // Mélange et sélection aléatoire de 5 tweets
-    const shuffled = filtered.sort(() => 0.5 - Math.random()).slice(0, 5);
+      if (selectedTags.length > 0) {
+        filtered = filtered.filter(tweet => tweet.tags.some(tag => selectedTags.includes(tag)));
+      }
 
-    setTweets(shuffled);
-    setDebugMessage(`✅ Loaded ${shuffled.length} tweet(s) from database.`);
-  } else if (error) {
-    setDebugMessage(`❌ Error fetching tweets: ${error.message}`);
-  } else {
-    setDebugMessage(`⚠️ No tweets found.`);
-  }
-};
+      if (selectedRatings.length > 0) {
+        filtered = filtered.filter(tweet => selectedRatings.includes(tweet.rating));
+      }
 
+      const shuffled = filtered.sort(() => 0.5 - Math.random()).slice(0, 5);
+      setTweets(shuffled);
+      setDebugMessage(`✅ Loaded ${shuffled.length} tweet(s) from database.`);
+    } else if (error) {
+      setDebugMessage(`❌ Error fetching tweets: ${error.message}`);
+    } else {
+      setDebugMessage(`⚠️ No tweets found.`);
+    }
+  };
 
   const markAsUsed = async (id) => {
     const { error } = await supabase.from('tweets').update({ used: true }).eq('id', id);
@@ -62,8 +68,22 @@ const fetchTweets = async () => {
     );
   };
 
+  const toggleRating = (rating) => {
+    setSelectedRatings(prev =>
+      prev.includes(rating) ? prev.filter(r => r !== rating) : [...prev, rating]
+    );
+  };
+
   const regenerateTweets = () => {
     fetchTweets();
+  };
+
+  const rateTweet = async (id, rating) => {
+    const { error } = await supabase.from('tweets').update({ rating }).eq('id', id);
+    if (!error) {
+      setRatingsMap({ ...ratingsMap, [id]: rating });
+      setTweets(tweets.map(tweet => (tweet.id === id ? { ...tweet, rating } : tweet)));
+    }
   };
 
   return (
@@ -91,12 +111,29 @@ const fetchTweets = async () => {
         </div>
 
         <div className="bg-white/30 backdrop-blur-md rounded-2xl p-4 shadow-md">
+          <h2 className="text-lg font-semibold mb-2">🌟 Filter by rating</h2>
+          <div className="flex gap-2 justify-center">
+            {RATINGS.map(rating => (
+              <button
+                key={rating}
+                onClick={() => toggleRating(rating)}
+                className={`px-3 py-1 rounded-full border transition ${
+                  selectedRatings.includes(rating) ? 'bg-blue-500 text-white' : 'bg-white text-black'
+                }`}
+              >
+                {rating}★
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-white/30 backdrop-blur-md rounded-2xl p-4 shadow-md">
           <h2 className="text-lg font-semibold mb-4">📝 Suggested Tweets</h2>
           {tweets.length > 0 ? (
             tweets.map(tweet => (
               <div key={tweet.id} className="bg-white rounded-xl p-3 shadow-sm mb-4">
                 <p className="mb-2">{tweet.text}</p>
-                <div className="flex gap-2">
+                <div className="flex gap-2 mb-2">
                   <a
                     href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweet.text)}`}
                     target="_blank"
@@ -111,6 +148,32 @@ const fetchTweets = async () => {
                   >
                     Mark as used
                   </button>
+                </div>
+                <div className="flex items-center gap-2">
+                  {tweet.rating ? (
+                    <>
+                      <span className="text-sm text-gray-700">Rated: {tweet.rating}★</span>
+                      <button
+                        onClick={() => setRatingsMap({ ...ratingsMap, [tweet.id]: 0 })}
+                        className="text-sm text-blue-500 underline"
+                      >
+                        Change rating
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-sm text-gray-700">Rate this tweet:</span>
+                      {RATINGS.map(r => (
+                        <button
+                          key={r}
+                          onClick={() => rateTweet(tweet.id, r)}
+                          className="text-sm px-2 py-1 rounded bg-yellow-200 hover:bg-yellow-300"
+                        >
+                          {r}★
+                        </button>
+                      ))}
+                    </>
+                  )}
                 </div>
               </div>
             ))
