@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from './src_supabase';
 
 const TAGS = [
-  'Bitcoin', 'Crypto', 'Runes', 'DeFi', 'Market',
+  'BITCOIN', 'Crypto', 'Runes', 'DeFi', 'Market',
   'Ordinals', 'Ecosystem', 'Adoption', 'Trading', 'Memes'
 ];
 
