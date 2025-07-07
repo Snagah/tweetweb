@@ -88,18 +88,22 @@ export default function App() {
     }
   };
 
-  const saveEditedTweet = async (id) => {
-    const { error } = await supabase
-      .from('tweets')
-      .update({ custom_text: editedText })
-      .eq('id', id);
+const saveEditedTweet = async (id) => {
+  const { error } = await supabase
+    .from('tweets')
+    .update({ custom_text: editedText })
+    .eq('id', id);
 
-    if (!error) {
-      setTweets(tweets.map(t => t.id === id ? { ...t, custom_text: editedText } : t));
-      setEditingTweetId(null);
-      setEditedText('');
-    }
-  };
+  if (!error) {
+    setTweets(tweets.map(t => t.id === id ? { ...t, custom_text: editedText } : t));
+    setEditingTweetId(null);
+    setEditedText('');
+    fetchTweets(); // ✅ Rafraîchir la liste pour réafficher les boutons
+  } else {
+    setDebugMessage(`❌ Failed to save tweet: ${error.message}`);
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-300 via-yellow-100 to-red-200 text-black p-4 flex flex-col items-center">
