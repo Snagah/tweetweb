@@ -11,9 +11,9 @@ const RATINGS = [1, 2, 3, 4, 5];
 export default function App() {
   const [tweets, setTweets] = useState([]);
   const [usedTweets, setUsedTweets] = useState([]);
-  const [favoriteTweets, setFavoriteTweets] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
   const [selectedRatings, setSelectedRatings] = useState([]);
+  const [filterFavorites, setFilterFavorites] = useState(false);
   const [debugMessage, setDebugMessage] = useState('');
   const [ratingsMap, setRatingsMap] = useState({});
   const [editingTweetId, setEditingTweetId] = useState(null);
@@ -22,8 +22,7 @@ export default function App() {
   useEffect(() => {
     fetchTweets();
     fetchUsedTweets();
-    fetchFavoriteTweets();
-  }, [selectedTags, selectedRatings]);
+  }, [selectedTags, selectedRatings, filterFavorites]);
 
   const fetchTweets = async () => {
     const { data, error } = await supabase
@@ -41,6 +40,10 @@ export default function App() {
 
       if (selectedRatings.length > 0) {
         filtered = filtered.filter(tweet => selectedRatings.includes(tweet.rating));
+      }
+
+      if (filterFavorites) {
+        filtered = filtered.filter(tweet => tweet.is_favorite);
       }
 
       const shuffled = filtered.sort(() => 0.5 - Math.random()).slice(0, 5);
@@ -64,18 +67,13 @@ export default function App() {
   const toggleFavorite = async (id, value) => {
     const { error } = await supabase.from('tweets').update({ is_favorite: value }).eq('id', id);
     if (!error) {
-      fetchFavoriteTweets();
+      setTweets(tweets.map(tweet => tweet.id === id ? { ...tweet, is_favorite: value } : tweet));
     }
   };
 
   const fetchUsedTweets = async () => {
     const { data, error } = await supabase.from('tweets').select('*').eq('used', true);
     if (!error) setUsedTweets(data);
-  };
-
-  const fetchFavoriteTweets = async () => {
-    const { data, error } = await supabase.from('tweets').select('*').eq('is_favorite', true);
-    if (!error) setFavoriteTweets(data);
   };
 
   const toggleTag = (tag) => {
@@ -91,6 +89,10 @@ export default function App() {
     );
   };
 
+  const toggleFilterFavorites = () => {
+    setFilterFavorites(prev => !prev);
+  };
+
   const regenerateTweets = () => {
     fetchTweets();
   };
@@ -100,6 +102,14 @@ export default function App() {
     if (!error) {
       setRatingsMap({ ...ratingsMap, [id]: rating });
       setTweets(tweets.map(tweet => (tweet.id === id ? { ...tweet, rating } : tweet)));
+    }
+  };
+
+  const clearRating = async (id) => {
+    const { error } = await supabase.from('tweets').update({ rating: null }).eq('id', id);
+    if (!error) {
+      setRatingsMap({ ...ratingsMap, [id]: null });
+      setTweets(tweets.map(tweet => (tweet.id === id ? { ...tweet, rating: null } : tweet)));
     }
   };
 
@@ -142,7 +152,7 @@ export default function App() {
 
         <div className="bg-white/30 backdrop-blur-md rounded-2xl p-4 shadow-md">
           <h2 className="text-lg font-semibold mb-2">🌟 Filter by rating</h2>
-          <div className="flex gap-2 justify-center">
+          <div className="flex gap-2 justify-center mb-2">
             {RATINGS.map(rating => (
               <button
                 key={rating}
@@ -151,9 +161,19 @@ export default function App() {
                   selectedRatings.includes(rating) ? 'bg-blue-500 text-white' : 'bg-white text-black'
                 }`}
               >
-                {rating}★
+                {rating}⭐
               </button>
             ))}
+          </div>
+          <div className="flex justify-center">
+            <button
+              onClick={toggleFilterFavorites}
+              className={`px-3 py-1 rounded-full border transition ${
+                filterFavorites ? 'bg-pink-500 text-white' : 'bg-white text-black'
+              }`}
+            >
+              ❤️ Favorites
+            </button>
           </div>
         </div>
 
@@ -185,7 +205,7 @@ export default function App() {
                 ) : (
                   <>
                     <p className="mb-2">{tweet.custom_text || tweet.text}</p>
-                    <div className="flex gap-2 mb-2">
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
                       <a
                         href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweet.custom_text || tweet.text)}`}
                         target="_blank"
@@ -201,12 +221,6 @@ export default function App() {
                         Mark as used
                       </button>
                       <button
-                        onClick={() => toggleFavorite(tweet.id, !tweet.is_favorite)}
-                        className="bg-pink-400 text-white px-3 py-1 rounded"
-                      >
-                        {tweet.is_favorite ? '💔 Remove Favorite' : '❤️ Favorite'}
-                      </button>
-                      <button
                         onClick={() => {
                           setEditingTweetId(tweet.id);
                           setEditedText(tweet.custom_text || tweet.text);
@@ -215,36 +229,39 @@ export default function App() {
                       >
                         ✏️ Edit
                       </button>
+                      {tweet.rating ? (
+                        <>
+                          <span className="text-sm text-gray-700">Rated: {tweet.rating}⭐</span>
+                          <button
+                            onClick={() => clearRating(tweet.id)}
+                            className="text-sm text-blue-500 underline"
+                          >
+                            Change rating
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-sm text-gray-700">Rate:</span>
+                          {RATINGS.map(r => (
+                            <button
+                              key={r}
+                              onClick={() => rateTweet(tweet.id, r)}
+                              className="text-sm px-2 py-1 rounded bg-yellow-200 hover:bg-yellow-300"
+                            >
+                              {r}⭐
+                            </button>
+                          ))}
+                        </>
+                      )}
+                      <button
+                        onClick={() => toggleFavorite(tweet.id, !tweet.is_favorite)}
+                        className="text-lg px-2"
+                      >
+                        {tweet.is_favorite ? '💔' : '❤️'}
+                      </button>
                     </div>
                   </>
                 )}
-
-                <div className="flex items-center gap-2">
-                  {tweet.rating ? (
-                    <>
-                      <span className="text-sm text-gray-700">Rated: {tweet.rating}★</span>
-                      <button
-                        onClick={() => setRatingsMap({ ...ratingsMap, [tweet.id]: 0 })}
-                        className="text-sm text-blue-500 underline"
-                      >
-                        Change rating
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <span className="text-sm text-gray-700">Rate this tweet:</span>
-                      {RATINGS.map(r => (
-                        <button
-                          key={r}
-                          onClick={() => rateTweet(tweet.id, r)}
-                          className="text-sm px-2 py-1 rounded bg-yellow-200 hover:bg-yellow-300"
-                        >
-                          {r}★
-                        </button>
-                      ))}
-                    </>
-                  )}
-                </div>
               </div>
             ))
           ) : (
@@ -259,17 +276,6 @@ export default function App() {
             </button>
           </div>
         </div>
-
-        {favoriteTweets.length > 0 && (
-          <div className="bg-white/30 backdrop-blur-md rounded-2xl p-4 shadow-md">
-            <h2 className="text-lg font-semibold mb-2">⭐ Favorite Tweets</h2>
-            <ul className="list-disc list-inside text-gray-700 space-y-1">
-              {favoriteTweets.map(t => (
-                <li key={t.id}>{t.text}</li>
-              ))}
-            </ul>
-          </div>
-        )}
 
         {usedTweets.length > 0 && (
           <div className="bg-white/30 backdrop-blur-md rounded-2xl p-4 shadow-md">
