@@ -3,7 +3,7 @@ import { supabase } from './src_supabase';
 
 const TAGS = [
   'BITCOIN', 'CRYPTO', 'RUNES', 'DEFI', 'MARKET',
-  'ORDINALS', 'ECOSYSTEM', 'ADOPTION', 'TRADING', 'MEMES'
+  'ORDINALS', 'ECOSYSTEM', 'ADOPTION', 'TRADING', 'MIDL', 'MEMES'
 ];
 
 export default function App() {
