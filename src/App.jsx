@@ -17,11 +17,11 @@ export default function App() {
   }, [selectedTags]);
 
   const fetchTweets = async () => {
-    let query = supabase.from('tweets').select('*').eq('used', false);
+    let query = supabase.from('tweets').select('*').eq('used', false).eq('is_active', true);
     if (selectedTags.length > 0) {
       query = query.contains('tags', selectedTags);
     }
-    const { data, error } = await query.limit(3);
+    const { data, error } = await query.limit(5);
     if (!error) {
       setTweets(data);
       setDebugMessage(`✅ Loaded ${data.length} tweet(s) from database.`);
@@ -50,55 +50,69 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-rose-200 via-yellow-200 to-red-200 p-4 text-black">
-      <h1 className="text-3xl font-bold text-center mb-4">🚀 Tweet Suggester</h1>
-      <div className="text-sm text-gray-600 text-center mb-4">{debugMessage}</div>
-      <div className="flex flex-wrap justify-center gap-2 mb-6">
-        {TAGS.map(tag => (
-          <button
-            key={tag}
-            onClick={() => toggleTag(tag)}
-            className={`px-3 py-1 rounded-full border ${
-              selectedTags.includes(tag) ? 'bg-green-500 text-white' : 'bg-white text-black'
-            }`}
-          >
-            {tag}
-          </button>
-        ))}
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-rose-300 via-yellow-100 to-red-200 text-black p-4 flex flex-col items-center">
+      <div className="max-w-xl w-full space-y-6">
+        <h1 className="text-4xl font-bold text-center mt-4">🚀 Tweet Suggester</h1>
 
-      <div className="grid gap-4 mb-6">
-        {tweets.map(tweet => (
-          <div key={tweet.id} className="bg-white rounded-2xl shadow-md p-4">
-            <p className="mb-3">{tweet.text}</p>
-            <a
-              href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweet.text)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-blue-500 text-white px-4 py-2 rounded mr-2"
-            >
-              Tweet it
-            </a>
-            <button
-              onClick={() => markAsUsed(tweet.id)}
-              className="bg-gray-300 text-black px-4 py-2 rounded"
-            >
-              Mark as used
-            </button>
-          </div>
-        ))}
-      </div>
+        <div className="text-sm text-gray-700 text-center">{debugMessage}</div>
 
-      {usedTweets.length > 0 && (
-        <div className="bg-green-50 rounded-2xl p-4">
-          <h2 className="text-xl font-semibold mb-2">✅ Already Used Tweets</h2>
-          <ul className="list-disc list-inside">
-            {usedTweets.map(t => (
-              <li key={t.id} className="text-gray-600">{t.text}</li>
+        <div className="bg-white/30 backdrop-blur-md rounded-2xl p-4 shadow-md">
+          <h2 className="text-lg font-semibold mb-2">🎯 Filter by tags</h2>
+          <div className="flex flex-wrap gap-2 justify-center">
+            {TAGS.map(tag => (
+              <button
+                key={tag}
+                onClick={() => toggleTag(tag)}
+                className={`px-3 py-1 rounded-full border transition ${
+                  selectedTags.includes(tag) ? 'bg-green-500 text-white' : 'bg-white text-black'
+                }`}
+              >
+                {tag}
+              </button>
             ))}
-          </ul>
+          </div>
         </div>
-      )}
+
+        <div className="bg-white/30 backdrop-blur-md rounded-2xl p-4 shadow-md">
+          <h2 className="text-lg font-semibold mb-4">📝 Suggested Tweets</h2>
+          {tweets.length > 0 ? (
+            tweets.map(tweet => (
+              <div key={tweet.id} className="bg-white rounded-xl p-3 shadow-sm mb-4">
+                <p className="mb-2">{tweet.text}</p>
+                <div className="flex gap-2">
+                  <a
+                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweet.text)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-blue-500 text-white px-3 py-1 rounded"
+                  >
+                    Tweet it
+                  </a>
+                  <button
+                    onClick={() => markAsUsed(tweet.id)}
+                    className="bg-gray-300 text-black px-3 py-1 rounded"
+                  >
+                    Mark as used
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-center text-gray-600">No tweets available.</p>
+          )}
+        </div>
+
+        {usedTweets.length > 0 && (
+          <div className="bg-white/30 backdrop-blur-md rounded-2xl p-4 shadow-md">
+            <h2 className="text-lg font-semibold mb-2">✅ Already Used Tweets</h2>
+            <ul className="list-disc list-inside text-gray-700 space-y-1">
+              {usedTweets.map(t => (
+                <li key={t.id}>{t.text}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
