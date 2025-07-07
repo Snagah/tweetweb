@@ -11,6 +11,7 @@ const RATINGS = [1, 2, 3, 4, 5];
 export default function App() {
   const [tweets, setTweets] = useState([]);
   const [usedTweets, setUsedTweets] = useState([]);
+  const [favoriteTweets, setFavoriteTweets] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
   const [selectedRatings, setSelectedRatings] = useState([]);
   const [debugMessage, setDebugMessage] = useState('');
@@ -20,6 +21,8 @@ export default function App() {
 
   useEffect(() => {
     fetchTweets();
+    fetchUsedTweets();
+    fetchFavoriteTweets();
   }, [selectedTags, selectedRatings]);
 
   const fetchTweets = async () => {
@@ -58,9 +61,21 @@ export default function App() {
     }
   };
 
+  const toggleFavorite = async (id, value) => {
+    const { error } = await supabase.from('tweets').update({ is_favorite: value }).eq('id', id);
+    if (!error) {
+      fetchFavoriteTweets();
+    }
+  };
+
   const fetchUsedTweets = async () => {
     const { data, error } = await supabase.from('tweets').select('*').eq('used', true);
     if (!error) setUsedTweets(data);
+  };
+
+  const fetchFavoriteTweets = async () => {
+    const { data, error } = await supabase.from('tweets').select('*').eq('is_favorite', true);
+    if (!error) setFavoriteTweets(data);
   };
 
   const toggleTag = (tag) => {
@@ -88,31 +103,18 @@ export default function App() {
     }
   };
 
-const saveEditedTweet = async (id) => {
-  const { error } = await supabase
-    .from('tweets')
-    .update({ custom_text: editedText })
-    .eq('id', id);
+  const saveEditedTweet = async (id) => {
+    const { error } = await supabase
+      .from('tweets')
+      .update({ custom_text: editedText })
+      .eq('id', id);
 
-  if (!error) {
-    setTweets(tweets.map(t => t.id === id ? { ...t, custom_text: editedText } : t));
-    setEditingTweetId(null);
-    setEditedText('');
-    setDebugMessage('✅ Tweet updated successfully.');
-  } else {
-    setDebugMessage(`❌ Failed to save tweet: ${error.message}`);
-  }
-};
-  const clearRating = async (id) => {
-  const { error } = await supabase.from('tweets').update({ rating: null }).eq('id', id);
-  if (!error) {
-    setRatingsMap({ ...ratingsMap, [id]: null });
-    setTweets(tweets.map(tweet => (tweet.id === id ? { ...tweet, rating: null } : tweet)));
-  }
-};
-
-
-
+    if (!error) {
+      setTweets(tweets.map(t => t.id === id ? { ...t, custom_text: editedText } : t));
+      setEditingTweetId(null);
+      setEditedText('');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-300 via-yellow-100 to-red-200 text-black p-4 flex flex-col items-center">
@@ -199,6 +201,12 @@ const saveEditedTweet = async (id) => {
                         Mark as used
                       </button>
                       <button
+                        onClick={() => toggleFavorite(tweet.id, !tweet.is_favorite)}
+                        className="bg-pink-400 text-white px-3 py-1 rounded"
+                      >
+                        {tweet.is_favorite ? '💔 Remove Favorite' : '❤️ Favorite'}
+                      </button>
+                      <button
                         onClick={() => {
                           setEditingTweetId(tweet.id);
                           setEditedText(tweet.custom_text || tweet.text);
@@ -215,13 +223,12 @@ const saveEditedTweet = async (id) => {
                   {tweet.rating ? (
                     <>
                       <span className="text-sm text-gray-700">Rated: {tweet.rating}★</span>
-<button
-  onClick={() => clearRating(tweet.id)}
-  className="text-sm text-blue-500 underline"
->
-  Change rating
-</button>
-
+                      <button
+                        onClick={() => setRatingsMap({ ...ratingsMap, [tweet.id]: 0 })}
+                        className="text-sm text-blue-500 underline"
+                      >
+                        Change rating
+                      </button>
                     </>
                   ) : (
                     <>
@@ -252,6 +259,17 @@ const saveEditedTweet = async (id) => {
             </button>
           </div>
         </div>
+
+        {favoriteTweets.length > 0 && (
+          <div className="bg-white/30 backdrop-blur-md rounded-2xl p-4 shadow-md">
+            <h2 className="text-lg font-semibold mb-2">⭐ Favorite Tweets</h2>
+            <ul className="list-disc list-inside text-gray-700 space-y-1">
+              {favoriteTweets.map(t => (
+                <li key={t.id}>{t.text}</li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {usedTweets.length > 0 && (
           <div className="bg-white/30 backdrop-blur-md rounded-2xl p-4 shadow-md">
