@@ -228,12 +228,7 @@ export default function App() {
                         Mark as used
                       </button>
 
-                      <button
-                        onClick={() => toggleFavorite(tweet.id, !tweet.is_favorite)}
-                        className="text-lg px-2"
-                      >
-                        {tweet.is_favorite ? '💔' : '❤️'}
-                      </button>
+
                     </div>
                     <div className="mt-2">
                       {tweet.rating ? (
@@ -257,6 +252,12 @@ export default function App() {
                             >
                               {r}⭐
                             </button>
+                                                <button
+                        onClick={() => toggleFavorite(tweet.id, !tweet.is_favorite)}
+                        className="text-lg px-2"
+                      >
+                        {tweet.is_favorite ? '💔' : '❤️'}
+                      </button>
                           ))}
                         </div>
                       )}
