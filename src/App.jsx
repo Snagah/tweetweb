@@ -16,19 +16,31 @@ export default function App() {
     fetchTweets();
   }, [selectedTags]);
 
-  const fetchTweets = async () => {
-    let query = supabase.from('tweets').select('*').eq('used', false).eq('is_active', true);
-    if (selectedTags.length > 0) {
-      query = query.contains('tags', selectedTags);
-    }
-   const { data, error } = await query.order('RANDOM()').limit(5);
-    if (!error) {
-      setTweets(data);
-      setDebugMessage(`✅ Loaded ${data.length} tweet(s) from database.`);
-    } else {
-      setDebugMessage(`❌ Error fetching tweets: ${error.message}`);
-    }
-  };
+const fetchTweets = async () => {
+  const { data, error } = await supabase
+    .from('tweets')
+    .select('*')
+    .eq('used', false)
+    .eq('is_active', true);
+
+  if (!error && data.length > 0) {
+    // Filtrage par tags si besoin
+    const filtered = selectedTags.length > 0
+      ? data.filter(tweet => tweet.tags.some(tag => selectedTags.includes(tag)))
+      : data;
+
+    // Mélange et sélection aléatoire de 5 tweets
+    const shuffled = filtered.sort(() => 0.5 - Math.random()).slice(0, 5);
+
+    setTweets(shuffled);
+    setDebugMessage(`✅ Loaded ${shuffled.length} tweet(s) from database.`);
+  } else if (error) {
+    setDebugMessage(`❌ Error fetching tweets: ${error.message}`);
+  } else {
+    setDebugMessage(`⚠️ No tweets found.`);
+  }
+};
+
 
   const markAsUsed = async (id) => {
     const { error } = await supabase.from('tweets').update({ used: true }).eq('id', id);
