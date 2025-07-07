@@ -18,9 +18,9 @@ export default function App() {
 
   const fetchTweets = async () => {
     let query = supabase.from('tweets').select('*').eq('used', false);
-    if (selectedTags.length > 0) {
-      query = query.contains('tags', selectedTags);
-    }
+    //if (selectedTags.length > 0) {
+      //query = query.contains('tags', selectedTags);
+    //}
     const { data, error } = await query.limit(3);
     if (!error) {
       setTweets(data);
