@@ -31,7 +31,8 @@ export default function AuthWrapper() {
 
   return session ? (
     <div>
-      <div className="flex justify-end p-4">
+      <div className="flex justify-between items-center p-4 text-sm text-gray-800">
+        <span>Logged in as <strong>{session.user.email}</strong></span>
         <button
           onClick={handleLogout}
           className="bg-red-500 text-white px-4 py-2 rounded shadow hover:bg-red-600"
@@ -39,7 +40,7 @@ export default function AuthWrapper() {
           Logout
         </button>
       </div>
-      <App />
+      <App session={session} />
     </div>
   ) : (
     <Login />
