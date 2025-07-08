@@ -6,7 +6,7 @@ import Login from './Login';
 export default function AuthWrapper() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
-
+}
   useEffect(() => {
     const currentSession = supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
